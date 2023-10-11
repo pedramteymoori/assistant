@@ -55,7 +55,7 @@ func (a *AI) ProvideTips(conversations string) (*AIResponse, error) {
 	ctx := context.Background()
 
 	res, err := a.client.Send(ctx, &chatgpt.ChatCompletionRequest{
-		Model: chatgpt.GPT35Turbo,
+		Model: chatgpt.GPT4,
 		Messages: []chatgpt.ChatMessage{
 			{
 				Role:    chatgpt.ChatGPTModelRoleSystem,
