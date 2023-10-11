@@ -13,9 +13,9 @@ type AI struct {
 }
 
 type AIResponse struct {
-	Tenant          Tenant    `json:"tenant"`
-	Landlord        LandLord  `json:"landlord"`
-	QuestionIsAbout Questions `json:"questions"`
+	Tenant    Tenant    `json:"tenant"`
+	Landlord  LandLord  `json:"landlord"`
+	Questions Questions `json:"questions"`
 }
 
 type Tenant struct {
@@ -76,5 +76,11 @@ func (a *AI) ProvideTips(conversations string) (*AIResponse, error) {
 	return &AIResponse{
 		Tenant:   response.Tenant,
 		Landlord: response.Landlord,
+		Questions: Questions{
+			Deposit:      response.Questions.Deposit,
+			PropertyRent: response.Questions.PropertyRent,
+			Payment:      response.Questions.Payment,
+			Amenities:    response.Questions.Amenities,
+		},
 	}, nil
 }

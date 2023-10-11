@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/housinganywhere/assistant/internal/ai"
 )
@@ -97,26 +98,30 @@ func (a *Assistant) getSuggestions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *Assistant) prepareMessage(req Request) string {
+	re := regexp.MustCompile(`\r?\n`)
 
-	conv := "We are looking out for a tone which is not rude, abusive, disrespectful and making someone feel uncomfortable. The tone should be such that it helps the people involved in the conversation trust each other and make them feel secured\nConsidering these aspects can you please help me highlight whether the below conversation has acceptable tone or not? Can you please provide an average tone rating for tenant and landlord for the below conversation between the scale of 1 to 5, where 1 is acceptable and 5 is non-acceptable\nAlso, in case the score is towards unacceptable, please provide some suggestion how landlord and tenant can improve\nDoes the last message of the Tenant contain question around property-rental, deposit, payment or amenities?  if the last message is from landlord then please return false for all of these area\nCan you please provide json structure like:\n{\n    \"tenant\": {\n        \"score\": 4,\n        \"suggestions\": {\n            \"text\": \"XYZ\"\n        }\n    },\n    \"landlord\": {\n        \"score\": 4,\n        \"suggestions\": {\n            \"text\": \"ABC\"\n        }\n    },\n    \"questions\": {\n        \"property_rent\": false,\n        \"deposit\": false,\n        \"amenities\": false,\n        \"payment\": true   \n    }\n}"
+	conv := "We are looking out for a tone which is not rude, abusive, disrespectful and making someone feel uncomfortable. The tone should be such that it helps the people involved in the conversation trust each other and make them feel secured\nConsidering these aspects can you please help me highlight whether the below conversation has acceptable tone or not? \n Can you please provide an average tone rating for tenant and landlord for the below conversation between the scale of 1 to 5, where 1 is acceptable and 5 is non-acceptable\nAlso, in case the score is towards unacceptable, please provide some suggestion how landlord and tenant can improve\nDoes the last message of the Tenant contain question around property-rental, deposit, payment or amenities?  if the last message is from landlord then please return false for all of these area.\nCan you please provide json structure like:\n{\n    \"tenant\": {\n        \"score\": 4,\n        \"suggestion\": {\n            \"text\": \"XYZ\"\n        }\n    },\n    \"landlord\": {\n        \"score\": 4,\n        \"suggestion\": {\n            \"text\": \"ABC\"\n        }\n    },\n    \"questions\": {\n        \"property_rent\": false,\n        \"deposit\": false,\n        \"amenities\": false,\n        \"payment\": true   \n    }\n}\n\n\n"
 	for _, row := range req.Messages {
-		conv = fmt.Sprintf("%s%s:%s\n", conv, row.User, row.Message)
+		userMessage := re.ReplaceAllString(row.Message, " ")
+		conv = fmt.Sprintf("%s%s: %s\n", conv, row.User, userMessage)
 	}
 
 	return conv
 }
 
 func (a *Assistant) provideResponse(aiResp *ai.AIResponse) Response {
+	slug := ""
+	if aiResp.Questions.Amenities {
+		slug = "amenities"
+	} else if aiResp.Questions.PropertyRent {
+		slug = "property-rent"
+	} else if aiResp.Questions.Deposit {
+		slug = "deposit"
+	} else if aiResp.Questions.Payment {
+		slug = "payment"
+	}
 
-	//var tenantText string
-	//
-	//if aiResp.Tenant > 8 {
-	//	tenantText = "good job"
-	//} else {
-	//
-	//}
-
-	return Response{
+	res := Response{
 		Tenant: Tenant{
 			Score: aiResp.Tenant.Score,
 			Suggestion: Suggestion{
@@ -129,7 +134,12 @@ func (a *Assistant) provideResponse(aiResp *ai.AIResponse) Response {
 				Text: aiResp.Landlord.Suggestion.Text,
 			},
 		},
+		Questions: Questions{
+			slug,
+		},
 	}
+
+	return res
 }
 
 func enableCors(w *http.ResponseWriter) {
