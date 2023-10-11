@@ -52,6 +52,8 @@ func (a *Assistant) Start() {
 }
 
 func (a *Assistant) getSuggestions(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+
 	var req Request
 
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -111,4 +113,8 @@ func (a *Assistant) provideResponse(aiResp *ai.AIResponse) Response {
 			Slug: "hi",
 		},
 	}
+}
+
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
