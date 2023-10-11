@@ -13,8 +13,30 @@ type AI struct {
 }
 
 type AIResponse struct {
-	Tenant   int `json:"tenant"`
-	Landlord int `json:"landlord"`
+	Tenant          Tenant    `json:"tenant"`
+	Landlord        LandLord  `json:"landlord"`
+	QuestionIsAbout Questions `json:"questions"`
+}
+
+type Tenant struct {
+	Score      float32    `json:"score"`
+	Suggestion Suggestion `json:"suggestion"`
+}
+
+type LandLord struct {
+	Score      float32    `json:"score"`
+	Suggestion Suggestion `json:"suggestion"`
+}
+
+type Questions struct {
+	PropertyRent bool `json:"property_rent"`
+	Deposit      bool `json:"deposit"`
+	Amenities    bool `json:"amenities"`
+	Payment      bool `json:"payment"`
+}
+
+type Suggestion struct {
+	Text string `json:"text"`
 }
 
 func NewAI() (*AI, error) {
