@@ -47,7 +47,7 @@ func (a *Assistant) Start() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/assist", a.getSuggestions)
 
-	err := http.ListenAndServe(":3333", mux)
+	err := http.ListenAndServe(":8080", mux)
 	panic(err)
 }
 
